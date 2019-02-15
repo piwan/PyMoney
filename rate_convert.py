@@ -1,3 +1,5 @@
+import csv
+
 from money import Monetary
 
 
@@ -16,6 +18,18 @@ class FixedRateConverter:
                 'USD': 1
             }
         }
+
+    def import_rates_from_csv(self, file_path):
+        with open(file_path, 'r') as csv_file:
+            self.rates = {}
+            reader = csv.DictReader(csv_file)
+            for row in reader:
+                base = row['Base']
+                currency = row['Currency']
+                rate = float(row['Rate'])
+                if base not in self.rates:
+                    self.rates[base] = {}
+                self.rates[base][currency] = rate
 
     def convert(self, from_monetary, to_currency):
         """
