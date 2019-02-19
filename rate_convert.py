@@ -1,5 +1,7 @@
 import csv
 
+import requests
+
 from money import Monetary
 
 
@@ -44,6 +46,24 @@ class FixedRateConverter:
             return Monetary(from_monetary * rate, to_currency)
         except KeyError:
             raise ExchangeRateNotDefined(from_monetary.currency, to_currency)
+
+
+class DynamicRateConverter(FixedRateConverter):
+    """RateExchangeConverter using rates from https://api.exchangeratesapi.io"""
+    api_url = 'https://api.exchangeratesapi.io'
+
+    def __init__(self):
+        super().__init__()
+        self.rates = {}
+        self.import_rates_from_api('EUR')
+        self.import_rates_from_api('USD')
+
+    def import_rates_from_api(self, base_currency):
+        response = requests.get(f'{self.api_url}/latest/?base={base_currency}')
+        response_dict = response.json()
+        self.rates[base_currency] = {}
+        for to_currency, rate in response_dict['rates'].items():
+            self.rates[base_currency][to_currency] = rate
 
 
 class ExchangeRateNotDefined(Exception):
